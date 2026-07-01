@@ -11,11 +11,8 @@ import ControlPanel from '../components/ControlPanel';
 const PRESET_AIRPORTS: PresetAirport[] = [
   { code: 'JFK', name: 'John F. Kennedy Intl', lat: 40.6413, lon: -73.7781 },
   { code: 'LHR', name: 'London Heathrow', lat: 51.4700, lon: -0.4543 },
-  { code: 'HND', name: 'Tokyo Haneda', lat: 35.5494, lon: 139.7798 },
   { code: 'FRA', name: 'Frankfurt Airport', lat: 50.0379, lon: 8.5622 },
   { code: 'DXB', name: 'Dubai International', lat: 25.2532, lon: 55.3657 },
-  { code: 'SIN', name: 'Singapore Changi', lat: 1.3644, lon: 103.9915 },
-  { code: 'SYD', name: 'Sydney Kingsford Smith', lat: -33.9461, lon: 151.1772 }
 ];
 
 export default function Home() {

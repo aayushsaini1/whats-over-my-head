@@ -10,7 +10,7 @@ export default function Header({ theme, setTheme }: HeaderProps) {
   return (
     <header className="header">
       <div className="header-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div className="title-wrapper" style={{ margin: 0 }}>
+        <div className="title-wrapper" style={{ margin: 0, gap: '1.2rem' }}>
           <span className="radar-icon-pulse"></span>
           <h1 id="app-title" className="gradient-text font-mono">What&apos;s Over My Head</h1>
         </div>
@@ -26,7 +26,6 @@ export default function Header({ theme, setTheme }: HeaderProps) {
           <option value="light-blue">THEME: LIGHT BLUE</option>
         </select>
       </div>
-      <p className="subtitle font-mono" style={{ textAlign: 'left' }}>Live ADS-B Telemetry Scanner</p>
     </header>
   );
 }

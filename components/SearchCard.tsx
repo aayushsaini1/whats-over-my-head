@@ -91,13 +91,6 @@ export default function SearchCard({
               {airport.code} ({airport.name.split(' ')[0]})
             </button>
           ))}
-          <button
-            onClick={loadTestFlights}
-            className="preset-badge-btn font-mono"
-            style={{ background: 'rgba(16, 185, 129, 0.25)', borderColor: 'var(--accent-green)', color: 'var(--text-primary)', fontWeight: 'bold' }}
-          >
-            🧪 Run POC (Demo Data)
-          </button>
         </div>
       </div>
     </div>

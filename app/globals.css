@@ -97,6 +97,7 @@ body[data-theme="light-blue"] {
 /* Set root font size to 12px so 1rem = 12px */
 html {
   font-size: 75%;
+  color-scheme: dark;
 }
 
 body {
@@ -159,8 +160,8 @@ body {
 /* Radar pulse animation */
 .radar-icon-pulse {
   position: relative;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 0.8rem;
+  height: 0.8rem;
   background-color: var(--accent-green);
   border-radius: 50%;
   box-shadow: 0 0 0.8rem var(--accent-green);
@@ -169,14 +170,14 @@ body {
 .radar-icon-pulse::after {
   content: '';
   position: absolute;
-  top: -0.8rem;
-  left: -0.8rem;
-  right: -0.8rem;
-  bottom: -0.8rem;
+  top: -0.5rem;
+  left: -0.5rem;
+  right: -0.5rem;
+  bottom: -0.5rem;
   border: 0.15rem solid var(--accent-green);
   border-radius: 50%;
   opacity: 0;
-  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
 @keyframes pulse-ring {
@@ -955,10 +956,100 @@ body {
 
   .flight-card-header {
     padding: 0.75rem 1.0rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .flight-identity-row {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-right-side {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .flight-card-body {
-    padding: 20rem;
+    padding: 1.0rem;
+  }
+
+  .tech-row-horizontal {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .airline-logo {
+    height: 1.6rem;
+    max-width: 4.5rem;
+  }
+
+  .flight-callsign {
+    font-size: 1.3rem !important;
+  }
+
+  .flight-distance {
+    font-size: 1.0rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .control-panel {
+    padding: 1.0rem;
+    gap: 1.0rem;
+  }
+
+  .refresh-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .refresh-actions>button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .auto-refresh-control {
+    align-items: flex-start;
+  }
+
+  .search-form {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .search-input {
+    width: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .search-btn {
+    width: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .status-card {
+    padding: 2.0rem 1.0rem;
+  }
+
+  .dashboard-presets-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .location-banner {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .preset-badges {
+    gap: 0.4rem;
+  }
+
+  .footer-route-detail {
+    font-size: 1.0rem;
   }
 }
 

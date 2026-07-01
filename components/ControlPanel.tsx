@@ -70,14 +70,6 @@ export default function ControlPanel({
                 {airport.code}
               </button>
             ))}
-            <button
-              onClick={loadTestFlights}
-              className="preset-shortcut-btn font-mono"
-              style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.4)', color: 'var(--accent-green)', fontSize: '1.0rem', fontWeight: 'bold' }}
-              title="Run POC (Demo Data)"
-            >
-              🧪 DEMO
-            </button>
           </div>
         </div>
       </div>
