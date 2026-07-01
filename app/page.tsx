@@ -1,265 +1,22 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-
-interface Aircraft {
-  hex: string;
-  flight: string;
-  registration: string;
-  type: string;
-  description: string;
-  altitude: number | null;
-  speed: number | null;
-  heading: number | null;
-  distanceKm: number | null;
-  lat: number | null;
-  lon: number | null;
-  category: string;
-}
-
-type PermissionState = 'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported';
-
-interface PresetAirport {
-  name: string;
-  code: string;
-  lat: number;
-  lon: number;
-}
+import { Aircraft, PermissionState, PresetAirport, ThemeType } from './types';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import FlightCard from '../components/FlightCard';
+import SearchCard from '../components/SearchCard';
+import ControlPanel from '../components/ControlPanel';
 
 const PRESET_AIRPORTS: PresetAirport[] = [
-  { name: 'London Heathrow', code: 'LHR', lat: 51.4700, lon: -0.4543 },
-  { name: 'New York JFK', code: 'JFK', lat: 40.6413, lon: -73.7781 },
-  { name: 'Tokyo Haneda', code: 'HND', lat: 35.5494, lon: 139.7798 },
-  { name: 'Frankfurt Airport', code: 'FRA', lat: 50.0379, lon: 8.5622 },
+  { code: 'JFK', name: 'John F. Kennedy Intl', lat: 40.6413, lon: -73.7781 },
+  { code: 'LHR', name: 'London Heathrow', lat: 51.4700, lon: -0.4543 },
+  { code: 'HND', name: 'Tokyo Haneda', lat: 35.5494, lon: 139.7798 },
+  { code: 'FRA', name: 'Frankfurt Airport', lat: 50.0379, lon: 8.5622 },
+  { code: 'DXB', name: 'Dubai International', lat: 25.2532, lon: 55.3657 },
+  { code: 'SIN', name: 'Singapore Changi', lat: 1.3644, lon: 103.9915 },
+  { code: 'SYD', name: 'Sydney Kingsford Smith', lat: -33.9461, lon: 151.1772 }
 ];
-
-interface LazyRouteInfo {
-  callsign: string;
-  airlineName: string | null;
-  airlineIcao: string | null;
-  origin: {
-    icao: string | null;
-    iata: string | null;
-    name: string | null;
-    country: string | null;
-  } | null;
-  destination: {
-    icao: string | null;
-    iata: string | null;
-    name: string | null;
-    country: string | null;
-  } | null;
-}
-
-interface LazyAircraftInfo {
-  manufacturer: string | null;
-  modelName: string | null;
-  icaoType: string | null;
-  owner: string | null;
-  photoUrl: string | null;
-  photoThumbUrl: string | null;
-}
-
-// Sub-component for individual flight cards to handle lazy-loading route & details
-function FlightCard({ ac, userCoords }: { ac: Aircraft; userCoords: { lat: number; lon: number } }) {
-  const [routeInfo, setRouteInfo] = useState<LazyRouteInfo | null>(null);
-  const [aircraftInfo, setAircraftInfo] = useState<LazyAircraftInfo | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [logoFailed, setLogoFailed] = useState<boolean>(false);
-
-  // Extract airline code from callsign (DLH123 -> DLH, AA23 -> AA)
-  const getAirlineCode = (flight: string) => {
-    const cleanFlight = flight.trim().replace(/[^a-zA-Z0-9]/g, '');
-    const match = cleanFlight.match(/^([A-Za-z]{2,3})/);
-    return match ? match[1].toUpperCase() : null;
-  };
-
-  const airlineCode = getAirlineCode(ac.flight);
-
-  useEffect(() => {
-    let active = true;
-    const loadDetails = async () => {
-      setLoading(true);
-      try {
-        const queryParams = [];
-        if (ac.flight && ac.flight !== '—') queryParams.push(`callsign=${encodeURIComponent(ac.flight)}`);
-        if (ac.hex && ac.hex !== 'unknown') queryParams.push(`hex=${encodeURIComponent(ac.hex)}`);
-        
-        if (queryParams.length === 0) {
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch(`/api/route-info?${queryParams.join('&')}`);
-        if (!res.ok) throw new Error('Failed to load extra details');
-        const data = await res.json();
-        
-        if (active) {
-          setRouteInfo(data.route);
-          setAircraftInfo(data.aircraft);
-        }
-      } catch (err) {
-        console.error('Lazy load error:', err);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    loadDetails();
-
-    return () => {
-      active = false;
-    };
-  }, [ac.flight, ac.hex]);
-
-  const getCompassDirection = (bearing: number | null) => {
-    if (bearing === null) return '—';
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const index = Math.round(((bearing % 360) / 45)) % 8;
-    return `${bearing}° ${directions[index]}`;
-  };
-
-  const knotsToKmh = (kts: number | null) => {
-    if (kts === null) return '—';
-    return `${Math.round(kts * 1.852)} km/h`;
-  };
-
-  const [photoFailed, setPhotoFailed] = useState<boolean>(false);
-
-  return (
-    <article className="flight-card hover-reveal">
-      {/* Top Banner: Plane Photo if available */}
-      {aircraftInfo?.photoUrl && !photoFailed && (
-        <div className="flight-photo-header">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={aircraftInfo.photoUrl} 
-            alt={`${aircraftInfo.manufacturer || ''} ${aircraftInfo.modelName || ''}`} 
-            className="flight-photo"
-            onError={() => setPhotoFailed(true)}
-            loading="lazy"
-          />
-          <div className="photo-overlay"></div>
-        </div>
-      )}
-
-      <div className="flight-card-header">
-        <div className="flight-identity-row">
-          {/* Airline Logo */}
-          {airlineCode && !logoFailed && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`https://airlabs.co/img/airline/m/${airlineCode}.png`}
-              alt={`${airlineCode} logo`}
-              className="airline-logo"
-              onError={() => setLogoFailed(true)}
-              loading="lazy"
-            />
-          )}
-          <div className="flight-identity">
-            <span className="flight-callsign">{ac.flight !== '—' ? ac.flight : 'No Callsign'}</span>
-            <span className="flight-reg">
-              {ac.registration !== '—' ? ac.registration : `Hex: ${ac.hex.toUpperCase()}`}
-            </span>
-          </div>
-        </div>
-        
-        <div className="flight-distance">
-          {ac.distanceKm !== null ? `${ac.distanceKm} KM` : 'DIST UNKNOWN'}
-        </div>
-      </div>
-
-      <div className="flight-card-body">
-        {/* Route Row (Origin -> Destination) */}
-        <div className="route-container">
-          <span className="route-header">ROUTE</span>
-          {loading ? (
-            <span className="loading-dots route-value">RESOLVING ROUTE</span>
-          ) : routeInfo?.origin && routeInfo?.destination ? (
-            <div className="route-display" title={`${routeInfo.origin.name} (${routeInfo.origin.country}) ➔ ${routeInfo.destination.name} (${routeInfo.destination.country})`}>
-              <span className="airport-code" title={routeInfo.origin.name || ''}>
-                {routeInfo.origin.iata || routeInfo.origin.icao || '???'}
-              </span>
-              <span className="route-arrow">➔</span>
-              <span className="airport-code" title={routeInfo.destination.name || ''}>
-                {routeInfo.destination.iata || routeInfo.destination.icao || '???'}
-              </span>
-            </div>
-          ) : (
-            <span className="route-value text-muted">SCHEDULE NOT FOUND</span>
-          )}
-        </div>
-
-        {/* Technical Data Grid */}
-        <div className="tech-telemetry-grid">
-          <div className="tech-col">
-            <span className="tech-label">EQUIPMENT</span>
-            <span className="tech-value font-mono highlight-cyan">
-              {loading ? (
-                <span className="loading-dots">RESOLVING</span>
-              ) : aircraftInfo?.manufacturer ? (
-                `${aircraftInfo.manufacturer} ${aircraftInfo.modelName || aircraftInfo.icaoType || ''}`
-              ) : ac.type !== '—' ? (
-                ac.type
-              ) : (
-                'UNKNOWN MODEL'
-              )}
-            </span>
-          </div>
-
-          {aircraftInfo?.owner && (
-            <div className="tech-col">
-              <span className="tech-label">OPERATOR</span>
-              <span className="tech-value font-mono">
-                {aircraftInfo.owner}
-              </span>
-            </div>
-          )}
-
-          <div className="tech-grid-2x2">
-            <div className="tech-col">
-              <span className="tech-label">ALTITUDE</span>
-              <span className="tech-value font-mono text-green">
-                {ac.altitude !== null ? `${ac.altitude.toLocaleString()} FT` : '—'}
-              </span>
-            </div>
-            <div className="tech-col">
-              <span className="tech-label">SPEED</span>
-              <span className="tech-value font-mono text-green">
-                {ac.speed !== null ? `${ac.speed} KTS` : '—'}
-                <span className="sub-metric">{ac.speed !== null && ` (${knotsToKmh(ac.speed)})`}</span>
-              </span>
-            </div>
-            <div className="tech-col">
-              <span className="tech-label">HEADING</span>
-              <span className="tech-value font-mono text-green">
-                {getCompassDirection(ac.heading)}
-              </span>
-            </div>
-            <div className="tech-col">
-              <span className="tech-label">CATEGORY</span>
-              <span className="tech-value font-mono">
-                {ac.category !== '—' ? ac.category : '—'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Expanded airport tooltip detail display */}
-      {!loading && routeInfo?.origin && (
-        <div className="flight-card-footer font-mono">
-          <div className="footer-route-detail">
-            DEP: <span className="highlight-code">{routeInfo.origin.iata || routeInfo.origin.icao || '???'}</span> <span className="airport-name-footer">{routeInfo.origin.name} ({routeInfo.origin.country})</span>
-          </div>
-          <div className="footer-route-detail">
-            ARR: <span className="highlight-code">{routeInfo.destination?.iata || routeInfo.destination?.icao || '???'}</span> <span className="airport-name-footer">{routeInfo.destination?.name} ({routeInfo.destination?.country})</span>
-          </div>
-        </div>
-      )}
-    </article>
-  );
-}
 
 export default function Home() {
   // Geolocation States
@@ -268,19 +25,11 @@ export default function Home() {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // Dynamic Theme States
-  type ThemeType = 'default' | 'dark-blue' | 'pink' | 'light-blue';
   const [theme, setTheme] = useState<ThemeType>('default');
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
   }, [theme]);
-
-  const cycleTheme = () => {
-    const themes: ThemeType[] = ['default', 'dark-blue', 'pink', 'light-blue'];
-    const currentIndex = themes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
-  };
 
   // Manual Mode & Search States
   const [isManualMode, setIsManualMode] = useState<boolean>(false);
@@ -296,6 +45,12 @@ export default function Home() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(5); // default 5km
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Sync radiusKm to a ref so requestLocation does not trigger permissions check effects on slider change
+  const radiusKmRef = useRef<number>(radiusKm);
+  useEffect(() => {
+    radiusKmRef.current = radiusKm;
+  }, [radiusKm]);
 
   // Throttling State for Manual Refresh
   const [cooldown, setCooldown] = useState<number>(0);
@@ -344,7 +99,7 @@ export default function Home() {
         setIsManualMode(false);
         setCustomLocationName(null);
         setLocationError(null);
-        fetchFlights(latitude, longitude, radiusKm);
+        fetchFlights(latitude, longitude, radiusKmRef.current);
       },
       (error) => {
         console.error('Geolocation error:', error);
@@ -357,7 +112,7 @@ export default function Home() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-  }, [fetchFlights, radiusKm]);
+  }, [fetchFlights]);
 
   // Initial Location request
   useEffect(() => {
@@ -434,12 +189,9 @@ export default function Home() {
     };
   }, []);
 
-  // Update flights when radius changes
+  // Update flights when radius changes (manual scan is now required to trigger query)
   const handleRadiusChange = (newRadius: number) => {
     setRadiusKm(newRadius);
-    if (coords) {
-      fetchFlights(coords.lat, coords.lon, newRadius);
-    }
   };
 
   // Geocoding / Manual Input Search Handler
@@ -461,7 +213,6 @@ export default function Home() {
       setIsManualMode(true);
       fetchFlights(lat, lon, radiusKm);
       setSearchLoading(false);
-      setSearchQuery('');
       return;
     }
 
@@ -489,7 +240,6 @@ export default function Home() {
         setPermission('granted');
         setIsManualMode(true);
         fetchFlights(lat, lon, radiusKm);
-        setSearchQuery('');
       } else {
         setSearchError('Location not found. Try a city name or "lat, lon" coordinates.');
       }
@@ -515,28 +265,66 @@ export default function Home() {
     requestLocation();
   };
 
+  // Load Test Flights for POC/demo mode
+  const loadTestFlights = () => {
+    const DUMMY_AIRCRAFTS: Aircraft[] = [
+      {
+        hex: '3c65a4',
+        flight: 'DLH400',
+        registration: 'D-AIMD',
+        type: 'A388',
+        description: 'Airbus A380-841',
+        altitude: 38000,
+        speed: 490,
+        heading: 270,
+        distanceKm: 4.2,
+        lat: 50.0379,
+        lon: 8.5622,
+        category: 'A5'
+      },
+      {
+        hex: 'a15397',
+        flight: 'DAL405',
+        registration: 'N185DN',
+        type: 'B763',
+        description: 'Boeing 767-332ER',
+        altitude: 12000,
+        speed: 320,
+        heading: 90,
+        distanceKm: 8.7,
+        lat: 40.6413,
+        lon: -73.7781,
+        category: 'A5'
+      },
+      {
+        hex: '406a05',
+        flight: 'BAW207',
+        registration: 'G-XLEF',
+        type: 'A388',
+        description: 'Airbus A380-841',
+        altitude: 35000,
+        speed: 485,
+        heading: 120,
+        distanceKm: 12.4,
+        lat: 51.4700,
+        lon: -0.4543,
+        category: 'A5'
+      }
+    ];
+    setAircrafts(DUMMY_AIRCRAFTS);
+    setVisibleCount(5);
+    setLastUpdated(new Date());
+    setFetchError(null);
+    setIsManualMode(true);
+    setCustomLocationName('Demo Mode (Test Flights)');
+    // Set mock coordinates to avoid errors in lazy loading distance calculation
+    setCoords({ lat: 50.0, lon: 8.0 });
+    setPermission('granted');
+  };
+
   return (
     <div className="container">
-      <header className="header">
-        <div className="header-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div className="title-wrapper" style={{ margin: 0 }}>
-            <span className="radar-icon-pulse"></span>
-            <h1 id="app-title" className="gradient-text font-mono">What&apos;s Over My Head</h1>
-          </div>
-          <select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value as ThemeType)}
-            className="secondary-btn font-mono theme-select-dropdown"
-            style={{ fontSize: '1.1rem', padding: '0.4rem 0.8rem', cursor: 'pointer', appearance: 'auto', outline: 'none' }}
-          >
-            <option value="default">THEME: DEFAULT (DARK)</option>
-            <option value="dark-blue">THEME: DARK BLUE</option>
-            <option value="pink">THEME: GIRLY PINK (LIGHT)</option>
-            <option value="light-blue">THEME: LIGHT BLUE</option>
-          </select>
-        </div>
-        <p className="subtitle font-mono" style={{ textAlign: 'left' }}>Live ADS-B Telemetry Scanner</p>
-      </header>
+      <Header theme={theme} setTheme={setTheme} />
 
       <main className="main-content">
         {permission === 'checking' && (
@@ -547,71 +335,19 @@ export default function Home() {
         )}
 
         {(permission === 'prompt' || permission === 'denied' || permission === 'unsupported') && (
-          <div className="card status-card action-needed font-mono">
-            <div className="alert-illustration">
-              {permission === 'denied' ? '❌' : permission === 'unsupported' ? '⚠️' : '📡'}
-            </div>
-            <h2>
-              {permission === 'denied'
-                ? 'Access Denied'
-                : permission === 'unsupported'
-                ? 'Browser Unsupported'
-                : 'Location Required'}
-            </h2>
-            <p>
-              {permission === 'denied'
-                ? locationError
-                : 'Telemetry scanner requires geographic coordinates to filter localized air traffic.'}
-            </p>
-            
-            {permission === 'prompt' && (
-              <button className="primary-btn pulse-glow" onClick={requestLocation}>
-                Acquire GPS Location
-              </button>
-            )}
-
-            {permission === 'denied' && (
-              <button className="secondary-btn" onClick={requestLocation} style={{ marginBottom: '0.5rem' }}>
-                Retry GPS Location
-              </button>
-            )}
-
-            <div className="manual-divider">
-              <span>Manual Target Selection</span>
-            </div>
-
-            {/* Manual Search Form */}
-            <form onSubmit={handleSearch} className="search-form">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter city (e.g. Frankfurt) or 'lat, lon'"
-                className="search-input font-mono"
-                disabled={searchLoading}
-              />
-              <button type="submit" className="search-btn font-mono" disabled={searchLoading}>
-                {searchLoading ? <span className="mini-spinner"></span> : 'Scan'}
-              </button>
-            </form>
-            {searchError && <p className="search-error font-mono">{searchError}</p>}
-
-            {/* Presets */}
-            <div className="presets-section">
-              <p className="presets-title">High-Density Radar Zones:</p>
-              <div className="preset-badges">
-                {PRESET_AIRPORTS.map((airport) => (
-                  <button
-                    key={airport.code}
-                    onClick={() => selectPreset(airport)}
-                    className="preset-badge-btn font-mono"
-                  >
-                    {airport.code} ({airport.name.split(' ')[0]})
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <SearchCard
+            permission={permission}
+            locationError={locationError}
+            requestLocation={requestLocation}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchLoading={searchLoading}
+            searchError={searchError}
+            handleSearch={handleSearch}
+            selectPreset={selectPreset}
+            loadTestFlights={loadTestFlights}
+            presetAirports={PRESET_AIRPORTS}
+          />
         )}
 
         {permission === 'granted' && coords && (
@@ -630,95 +366,24 @@ export default function Home() {
             )}
 
             {/* Control Panel */}
-            <div className="card control-panel font-mono">
-              {/* Manual search inside dashboard */}
-              <div className="dashboard-search-row">
-                <form onSubmit={handleSearch} className="search-form compact-search">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search city or 'lat, lon'"
-                    className="search-input font-mono"
-                    disabled={searchLoading}
-                  />
-                  <button type="submit" className="search-btn font-mono" disabled={searchLoading}>
-                    {searchLoading ? <span className="mini-spinner"></span> : 'Scan'}
-                  </button>
-                </form>
-                
-                {/* Presets in dashboard */}
-                <div className="dashboard-presets">
-                  {PRESET_AIRPORTS.map((airport) => (
-                    <button
-                      key={airport.code}
-                      onClick={() => selectPreset(airport)}
-                      className="preset-shortcut-btn font-mono"
-                      title={airport.name}
-                    >
-                      {airport.code}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {searchError && <p className="search-error text-left font-mono">{searchError}</p>}
-
-              <div className="control-group">
-                <label htmlFor="radius-slider" className="control-label">
-                  Scan Range: <span className="highlight-text">{radiusKm} KM</span>
-                </label>
-                <div className="slider-container">
-                  <span className="slider-bound">1KM</span>
-                  <input
-                    id="radius-slider"
-                    type="range"
-                    min="1"
-                    max="20"
-                    step="1"
-                    value={radiusKm}
-                    onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
-                    className="modern-slider"
-                  />
-                  <span className="slider-bound">20KM</span>
-                </div>
-              </div>
-
-              <div className="refresh-actions">
-                <button
-                  id="refresh-btn"
-                  className="secondary-btn font-mono"
-                  onClick={handleManualRefresh}
-                  disabled={cooldown > 0 || loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="mini-spinner"></span> Scanning...
-                    </>
-                  ) : cooldown > 0 ? (
-                    `Cooldown: ${cooldown}s`
-                  ) : (
-                    'Force Skies Scan'
-                  )}
-                </button>
-
-                <div className="auto-refresh-control">
-                  <label className="auto-refresh-toggle font-mono">
-                    <input
-                      type="checkbox"
-                      checked={autoRefresh}
-                      onChange={(e) => setAutoRefresh(e.target.checked)}
-                      className="toggle-checkbox"
-                    />
-                    <span>AUTO SCAN (10S)</span>
-                  </label>
-                  {lastUpdated && (
-                    <span className="last-updated">
-                      Updated: {lastUpdated.toLocaleTimeString()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ControlPanel
+              radiusKm={radiusKm}
+              handleRadiusChange={handleRadiusChange}
+              cooldown={cooldown}
+              loading={loading}
+              handleManualRefresh={handleManualRefresh}
+              autoRefresh={autoRefresh}
+              setAutoRefresh={setAutoRefresh}
+              lastUpdated={lastUpdated}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              searchLoading={searchLoading}
+              searchError={searchError}
+              handleSearch={handleSearch}
+              selectPreset={selectPreset}
+              loadTestFlights={loadTestFlights}
+              presetAirports={PRESET_AIRPORTS}
+            />
 
             {/* Content States */}
             {loading && aircrafts.length === 0 ? (
@@ -736,11 +401,18 @@ export default function Home() {
                 </button>
               </div>
             ) : aircrafts.length === 0 ? (
-              <div className="card empty-card font-mono">
+              <div className="card empty-card font-mono" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="empty-illustration">📡</div>
                 <h3>No Flight Traffic Detected</h3>
                 <p>No active transponders matched vector criteria within {radiusKm}KM radius.</p>
                 <p className="empty-tip">Tip: Increase scan range slider or trigger preset airport zones (e.g. JFK or LHR) to verify feed parsing.</p>
+                <button
+                  onClick={loadTestFlights}
+                  className="primary-btn font-mono"
+                  style={{ marginTop: '1.5rem', width: 'auto', display: 'inline-flex', padding: '0.8rem 1.6rem' }}
+                >
+                  🧪 Run POC (Load Test Flights)
+                </button>
               </div>
             ) : (
               <div className="flight-results font-mono">
@@ -770,34 +442,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="app-footer font-mono">
-        <p>Data Source: Community ODbL transponder aggregates.</p>
-        <p className="privacy-badge">🔒 Coordinates parsed locally only.</p>
-        <p className="made-by" style={{ marginTop: '0.8rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: 'var(--text-secondary)' }}>
-          made by{' '}
-          <a
-            href="https://alpher03.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#ffffff', textDecoration: 'underline', fontWeight: 'bold' }}
-          >
-            alpher03
-          </a>
-          <span className="nerd-barcode" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: '1px', marginLeft: '4px', opacity: 0.6 }}>
-            {[1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 3].map((w, idx) => (
-              <span
-                key={idx}
-                style={{
-                  display: 'inline-block',
-                  width: `${w}px`,
-                  height: '12px',
-                  backgroundColor: 'currentColor'
-                }}
-              />
-            ))}
-          </span>
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

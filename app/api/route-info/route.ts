@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
               callsign: fr.callsign,
               airlineName: fr.airline?.name || null,
               airlineIcao: fr.airline?.icao || null,
+              airlineIata: fr.airline?.iata || null,
               origin: fr.origin ? {
                 icao: fr.origin.icao_code || null,
                 iata: fr.origin.iata_code || null,
@@ -71,13 +72,32 @@ export async function GET(request: NextRequest) {
     } else {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
 
+        // Fetch primary aircraft details
         const res = await fetch(`https://api.adsbdb.com/v0/aircraft/${hex}`, {
           signal: controller.signal,
           headers: { 'Accept': 'application/json', 'User-Agent': 'WhatsOverMyHeadApp/1.0' },
-          next: { revalidate: 3600 } // Cache in Next for 1 hour
+          next: { revalidate: 3600 }
         });
+
+        // Try to fetch custom clean photo link from HexDB
+        let hexdbPhotoUrl = null;
+        try {
+          const hexdbRes = await fetch(`https://hexdb.io/hex-image?hex=${hex}`, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'WhatsOverMyHeadApp/1.0' }
+          });
+          if (hexdbRes.ok) {
+            const text = await hexdbRes.text();
+            if (text && text.trim().startsWith('http')) {
+              hexdbPhotoUrl = text.trim();
+            }
+          }
+        } catch (hexdbErr) {
+          console.error(`HexDB photo fetch failed for hex ${hex}:`, hexdbErr);
+        }
+
         clearTimeout(timeoutId);
 
         if (res.ok) {
@@ -89,7 +109,7 @@ export async function GET(request: NextRequest) {
               modelName: ac.type || null,
               icaoType: ac.icao_type || null,
               owner: ac.registered_owner || null,
-              photoUrl: ac.url_photo || null,
+              photoUrl: hexdbPhotoUrl || ac.url_photo_thumbnail || ac.url_photo || null,
               photoThumbUrl: ac.url_photo_thumbnail || null
             };
             aircraftCache.set(hex, aircraftData);
