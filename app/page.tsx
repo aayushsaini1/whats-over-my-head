@@ -403,13 +403,6 @@ export default function Home() {
                 <h3>No Flight Traffic Detected</h3>
                 <p>No active transponders matched vector criteria within {radiusKm}KM radius.</p>
                 <p className="empty-tip">Tip: Increase scan range slider or trigger preset airport zones (e.g. JFK or LHR) to verify feed parsing.</p>
-                <button
-                  onClick={loadTestFlights}
-                  className="primary-btn font-mono"
-                  style={{ marginTop: '1.5rem', width: 'auto', display: 'inline-flex', padding: '0.8rem 1.6rem' }}
-                >
-                  🧪 Run POC (Load Test Flights)
-                </button>
               </div>
             ) : (
               <div className="flight-results font-mono">
