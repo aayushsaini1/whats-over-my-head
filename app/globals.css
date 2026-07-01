@@ -1,24 +1,79 @@
 :root {
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Consolas, monospace;
 
-  /* B/W Dark Mode Theme */
+  /* Shared static variables */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+}
+
+/* 1. Default B/W Dark Theme */
+body, body[data-theme="default"] {
   --bg-main: #000000;
   --card-bg: rgba(18, 18, 18, 0.85);
   --card-border: rgba(255, 255, 255, 0.12);
   --card-hover-border: rgba(16, 185, 129, 0.7);
-  
   --text-primary: #f3f4f6;
   --text-secondary: #a1a1aa;
   --text-muted: #52525b;
-
   --accent-cyan: #06b6d4;
   --accent-green: #10b981;
   --accent-amber: #f59e0b;
   --accent-red: #ef4444;
+  --bg-gradient: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.94));
+  --card-shadow: 0 1.0rem 3.0rem rgba(0, 0, 0, 0.5);
+}
 
-  --success: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
+/* 2. Dark Blue Theme */
+body[data-theme="dark-blue"] {
+  --bg-main: #060e1d;
+  --card-bg: rgba(13, 27, 56, 0.85);
+  --card-border: rgba(59, 130, 246, 0.2);
+  --card-hover-border: rgba(96, 165, 250, 0.7);
+  --text-primary: #f0f7ff;
+  --text-secondary: #93c5fd;
+  --text-muted: #3b82f6;
+  --accent-cyan: #60a5fa;
+  --accent-green: #93c5fd;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+  --bg-gradient: linear-gradient(rgba(6, 14, 29, 0.88), rgba(6, 14, 29, 0.94));
+  --card-shadow: 0 1.0rem 3.0rem rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Pink Theme (Girly Light Pink) */
+body[data-theme="pink"] {
+  --bg-main: #fff0f6;
+  --card-bg: #ffffff;
+  --card-border: #fcc2d7;
+  --card-hover-border: #ff85b3;
+  --text-primary: #a61e4d;
+  --text-secondary: #c2255c;
+  --text-muted: #f783ac;
+  --accent-cyan: #d6336c;
+  --accent-green: #e64980;
+  --accent-amber: #d97706;
+  --accent-red: #e03131;
+  --bg-gradient: linear-gradient(#fff0f6, #fff5f7);
+  --card-shadow: 0 1.0rem 3.0rem rgba(230, 73, 128, 0.1);
+}
+
+
+/* 4. Light Blue Theme */
+body[data-theme="light-blue"] {
+  --bg-main: #f0f4f8;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --card-hover-border: #93c5fd;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent-cyan: #0284c7;
+  --accent-green: #1e3a8a;
+  --accent-amber: #d97706;
+  --accent-red: #dc2626;
+  --bg-gradient: linear-gradient(#f0f4f8, #f8fafc);
+  --card-shadow: 0 1.0rem 3.0rem rgba(59, 130, 246, 0.08);
 }
 
 * {
@@ -35,8 +90,8 @@ html {
 body {
   width: 100%;
   min-height: 100vh;
-  /* Black/Grey linear gradient overlay on background sky image */
-  background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.94)), url('/sky-bg.png');
+  /* Dynamic gradient overlay on background sky image */
+  background: var(--bg-gradient), url('/sky-bg.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -139,7 +194,7 @@ body {
   border-radius: 0.8rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1.0rem 3.0rem rgba(0, 0, 0, 0.5);
+  box-shadow: var(--card-shadow);
 }
 
 /* Control Panel */
@@ -912,5 +967,97 @@ body {
   cursor: pointer;
   width: 1.4rem;
   height: 1.4rem;
+}
+
+/* Light Theme Component Overrides (Pink & Light-Blue) */
+body[data-theme="pink"] .search-input,
+body[data-theme="light-blue"] .search-input {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 0.1rem solid var(--card-border);
+}
+
+body[data-theme="pink"] .search-input::placeholder,
+body[data-theme="light-blue"] .search-input::placeholder {
+  color: var(--text-muted);
+}
+
+body[data-theme="pink"] .preset-shortcut-btn,
+body[data-theme="pink"] .preset-badge-btn,
+body[data-theme="light-blue"] .preset-shortcut-btn,
+body[data-theme="light-blue"] .preset-badge-btn {
+  background: #ffffff;
+  border: 0.1rem solid var(--card-border);
+  color: var(--text-secondary);
+}
+
+body[data-theme="pink"] .preset-shortcut-btn:hover,
+body[data-theme="pink"] .preset-badge-btn:hover,
+body[data-theme="light-blue"] .preset-shortcut-btn:hover,
+body[data-theme="light-blue"] .preset-badge-btn:hover {
+  background: var(--text-primary);
+  color: #ffffff;
+  border-color: var(--text-primary);
+}
+
+body[data-theme="pink"] .control-group,
+body[data-theme="light-blue"] .control-group {
+  background: rgba(255, 255, 255, 0.5);
+  border: 0.1rem solid var(--card-border);
+}
+
+body[data-theme="pink"] .route-container,
+body[data-theme="light-blue"] .route-container {
+  background: rgba(0, 0, 0, 0.02);
+  border: 0.1rem solid var(--card-border);
+}
+
+body[data-theme="pink"] .flight-card-header,
+body[data-theme="light-blue"] .flight-card-header {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body[data-theme="pink"] .flight-card-footer,
+body[data-theme="light-blue"] .flight-card-footer {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+body[data-theme="pink"] .modern-slider,
+body[data-theme="light-blue"] .modern-slider {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="pink"] .modern-slider::-webkit-slider-thumb,
+body[data-theme="light-blue"] .modern-slider::-webkit-slider-thumb {
+  background: var(--text-primary);
+}
+
+body[data-theme="pink"] .secondary-btn,
+body[data-theme="light-blue"] .secondary-btn {
+  background: #ffffff;
+  border: 0.1rem solid var(--card-border);
+  color: var(--text-secondary);
+}
+
+body[data-theme="pink"] .secondary-btn:hover:not(:disabled),
+body[data-theme="light-blue"] .secondary-btn:hover:not(:disabled) {
+  background: var(--text-secondary);
+  color: #ffffff;
+  border-color: var(--text-secondary);
+}
+
+body[data-theme="pink"] .auto-refresh-toggle:hover,
+body[data-theme="light-blue"] .auto-refresh-toggle:hover {
+  color: var(--text-primary);
+}
+
+body[data-theme="pink"] .header,
+body[data-theme="light-blue"] .header {
+  border-bottom-color: var(--card-border);
+}
+
+body[data-theme="pink"] .app-footer,
+body[data-theme="light-blue"] .app-footer {
+  border-top-color: var(--card-border);
 }
 

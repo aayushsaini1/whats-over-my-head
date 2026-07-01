@@ -267,6 +267,21 @@ export default function Home() {
   const [permission, setPermission] = useState<PermissionState>('checking');
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  // Dynamic Theme States
+  type ThemeType = 'default' | 'dark-blue' | 'pink' | 'light-blue';
+  const [theme, setTheme] = useState<ThemeType>('default');
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const cycleTheme = () => {
+    const themes: ThemeType[] = ['default', 'dark-blue', 'pink', 'light-blue'];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
+  };
+
   // Manual Mode & Search States
   const [isManualMode, setIsManualMode] = useState<boolean>(false);
   const [customLocationName, setCustomLocationName] = useState<string | null>(null);
@@ -503,11 +518,24 @@ export default function Home() {
   return (
     <div className="container">
       <header className="header">
-        <div className="title-wrapper">
-          <span className="radar-icon-pulse"></span>
-          <h1 id="app-title" className="gradient-text font-mono">What&apos;s Over My Head</h1>
+        <div className="header-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="title-wrapper" style={{ margin: 0 }}>
+            <span className="radar-icon-pulse"></span>
+            <h1 id="app-title" className="gradient-text font-mono">What&apos;s Over My Head</h1>
+          </div>
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as ThemeType)}
+            className="secondary-btn font-mono theme-select-dropdown"
+            style={{ fontSize: '1.1rem', padding: '0.4rem 0.8rem', cursor: 'pointer', appearance: 'auto', outline: 'none' }}
+          >
+            <option value="default">THEME: DEFAULT (DARK)</option>
+            <option value="dark-blue">THEME: DARK BLUE</option>
+            <option value="pink">THEME: GIRLY PINK (LIGHT)</option>
+            <option value="light-blue">THEME: LIGHT BLUE</option>
+          </select>
         </div>
-        <p className="subtitle font-mono">Live ADS-B Telemetry Scanner</p>
+        <p className="subtitle font-mono" style={{ textAlign: 'left' }}>Live ADS-B Telemetry Scanner</p>
       </header>
 
       <main className="main-content">
