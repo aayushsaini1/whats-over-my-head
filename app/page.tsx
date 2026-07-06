@@ -102,14 +102,11 @@ export default function Home() {
       (error) => {
         console.warn('Geolocation error:', error.message || error);
         
-        // Safari/iOS does not support geolocation query correctly in Permissions API,
-        // and if it's the initial check (not a user gesture), we fallback to 'prompt'
-        // so that they see the custom click-to-acquire button rather than "Access Denied" error.
-        const isSafariOrIOS = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent) && !/Chromium/i.test(navigator.userAgent) || /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const hasPermissionsApi = !!(navigator.permissions && navigator.permissions.query);
-        const usePermissionsApi = hasPermissionsApi && !isSafariOrIOS;
-
-        if (!usePermissionsApi && !isUserGesture) {
+        // If this is the initial page load check (not a user gesture) and it fails,
+        // we set permission to 'prompt' so the user is not greeted with a hard
+        // "Access Denied" screen. They will see the friendly "Location Required" panel
+        // with an "Acquire GPS Location" button.
+        if (!isUserGesture) {
           setPermission('prompt');
           setLocationError(null);
         } else {
@@ -128,60 +125,7 @@ export default function Home() {
   // Initial Location request
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const isSafariOrIOS = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent) && !/Chromium/i.test(navigator.userAgent) || /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const hasPermissionsApi = !!(navigator.permissions && navigator.permissions.query);
-    const usePermissionsApi = hasPermissionsApi && !isSafariOrIOS;
-
-    let active = true;
-    let permissionObj: PermissionStatus | null = null;
-
-    if (usePermissionsApi) {
-      try {
-        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-          if (!active) return;
-          permissionObj = result;
-
-          if (result.state === 'granted') {
-            requestLocation(false);
-          } else if (result.state === 'prompt') {
-            requestLocation(false);
-          } else {
-            setPermission('denied');
-            setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
-          }
-
-          result.onchange = () => {
-            if (!active) return;
-            if (result.state === 'granted') {
-              requestLocation(false);
-            } else if (result.state === 'denied') {
-              setPermission('denied');
-              setCoords(null);
-              setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
-            } else {
-              setPermission('prompt');
-              setCoords(null);
-            }
-          };
-        }).catch((err) => {
-          console.warn('Error checking permission, falling back to direct request:', err);
-          if (active) requestLocation(false);
-        });
-      } catch (err) {
-        console.warn('Synchronous error checking permission, falling back to direct request:', err);
-        if (active) requestLocation(false);
-      }
-    } else {
-      requestLocation(false);
-    }
-
-    return () => {
-      active = false;
-      if (permissionObj) {
-        permissionObj.onchange = null;
-      }
-    };
+    requestLocation(false);
   }, [requestLocation]);
 
   // Auto-Refresh Setup (every 10 seconds, default off)
