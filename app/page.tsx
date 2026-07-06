@@ -80,7 +80,8 @@ export default function Home() {
   }, []);
 
   // Request Location
-  const requestLocation = useCallback(() => {
+  const requestLocation = useCallback((isUserGesture = false) => {
+    if (typeof window === 'undefined') return;
     if (!navigator.geolocation) {
       setPermission('unsupported');
       setLocationError('Geolocation is not supported by this browser.');
@@ -99,12 +100,25 @@ export default function Home() {
         fetchFlights(latitude, longitude, radiusKmRef.current);
       },
       (error) => {
-        console.error('Geolocation error:', error);
-        setPermission('denied');
-        if (error.code === error.PERMISSION_DENIED) {
-          setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
+        console.warn('Geolocation error:', error.message || error);
+        
+        // Safari/iOS does not support geolocation query correctly in Permissions API,
+        // and if it's the initial check (not a user gesture), we fallback to 'prompt'
+        // so that they see the custom click-to-acquire button rather than "Access Denied" error.
+        const isSafariOrIOS = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent) && !/Chromium/i.test(navigator.userAgent) || /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const hasPermissionsApi = !!(navigator.permissions && navigator.permissions.query);
+        const usePermissionsApi = hasPermissionsApi && !isSafariOrIOS;
+
+        if (!usePermissionsApi && !isUserGesture) {
+          setPermission('prompt');
+          setLocationError(null);
         } else {
-          setLocationError('Unable to retrieve your location. Please check your GPS signal or search manually.');
+          setPermission('denied');
+          if (error.code === error.PERMISSION_DENIED) {
+            setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
+          } else {
+            setLocationError('Unable to retrieve your location. Please check your GPS signal or search manually.');
+          }
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -113,35 +127,61 @@ export default function Home() {
 
   // Initial Location request
   useEffect(() => {
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        if (result.state === 'granted') {
-          requestLocation();
-        } else if (result.state === 'prompt') {
-          setPermission('prompt');
-        } else {
-          setPermission('denied');
-          setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
-        }
+    if (typeof window === 'undefined') return;
 
-        result.onchange = () => {
+    const isSafariOrIOS = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent) && !/Chromium/i.test(navigator.userAgent) || /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const hasPermissionsApi = !!(navigator.permissions && navigator.permissions.query);
+    const usePermissionsApi = hasPermissionsApi && !isSafariOrIOS;
+
+    let active = true;
+    let permissionObj: PermissionStatus | null = null;
+
+    if (usePermissionsApi) {
+      try {
+        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+          if (!active) return;
+          permissionObj = result;
+
           if (result.state === 'granted') {
-            requestLocation();
-          } else if (result.state === 'denied') {
-            setPermission('denied');
-            setCoords(null);
-            setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
+            requestLocation(false);
+          } else if (result.state === 'prompt') {
+            requestLocation(false);
           } else {
-            setPermission('prompt');
-            setCoords(null);
+            setPermission('denied');
+            setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
           }
-        };
-      }).catch(() => {
-        setPermission('prompt');
-      });
+
+          result.onchange = () => {
+            if (!active) return;
+            if (result.state === 'granted') {
+              requestLocation(false);
+            } else if (result.state === 'denied') {
+              setPermission('denied');
+              setCoords(null);
+              setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
+            } else {
+              setPermission('prompt');
+              setCoords(null);
+            }
+          };
+        }).catch((err) => {
+          console.warn('Error checking permission, falling back to direct request:', err);
+          if (active) requestLocation(false);
+        });
+      } catch (err) {
+        console.warn('Synchronous error checking permission, falling back to direct request:', err);
+        if (active) requestLocation(false);
+      }
     } else {
-      setPermission('prompt');
+      requestLocation(false);
     }
+
+    return () => {
+      active = false;
+      if (permissionObj) {
+        permissionObj.onchange = null;
+      }
+    };
   }, [requestLocation]);
 
   // Auto-Refresh Setup (every 10 seconds, default off)
@@ -259,7 +299,7 @@ export default function Home() {
 
   // Reset to GPS
   const handleResetToGps = () => {
-    requestLocation();
+    requestLocation(true);
   };
 
   // Load Test Flights for POC/demo mode

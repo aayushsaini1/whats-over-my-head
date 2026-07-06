@@ -4,7 +4,7 @@ import { PermissionState, PresetAirport } from '../app/types';
 interface SearchCardProps {
   permission: PermissionState;
   locationError: string | null;
-  requestLocation: () => void;
+  requestLocation: (isUserGesture?: boolean) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   searchLoading: boolean;
@@ -47,13 +47,13 @@ export default function SearchCard({
       </p>
       
       {permission === 'prompt' && (
-        <button className="primary-btn pulse-glow" onClick={requestLocation}>
+        <button className="primary-btn pulse-glow" onClick={() => requestLocation(true)}>
           Acquire GPS Location
         </button>
       )}
 
       {permission === 'denied' && (
-        <button className="secondary-btn" onClick={requestLocation} style={{ marginBottom: '0.5rem' }}>
+        <button className="secondary-btn" onClick={() => requestLocation(true)} style={{ marginBottom: '0.5rem' }}>
           Retry GPS Location
         </button>
       )}
