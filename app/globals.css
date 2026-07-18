@@ -63,7 +63,7 @@ body {
   right: -1.0rem;
   bottom: -1.0rem;
   z-index: -1;
-  background-image: url('/sky-bg.jpg');
+  background-image: url('/sky-bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
