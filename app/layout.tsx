@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "What's Over My Head? | Live Flight Radar Tracker",
-  description: "Instantly track and discover airplanes flying overhead or nearby in real-time using browser geolocation.",
+  title: "What's Over My Head? | Plane Tracker",
+  description: "Instantly track and discover airplanes flying overhead or nearby in real-time using your location.",
 };
 
 export const viewport: Viewport = {

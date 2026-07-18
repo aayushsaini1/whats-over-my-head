@@ -157,11 +157,17 @@ body {
 .card {
   background: var(--card-bg);
   border: 0.1rem solid var(--card-border);
-  border-radius: 3.2rem;
-  corner-shape: squircle;
+  border-radius: 1.6rem;
   padding: 2.0rem;
   margin-bottom: 1.6rem;
   box-shadow: var(--card-shadow);
+}
+
+@supports (corner-shape: squircle) {
+  .card {
+    border-radius: 3.2rem;
+    corner-shape: squircle;
+  }
 }
 
 /* Control Panel */
@@ -176,10 +182,16 @@ body {
   flex-direction: column;
   gap: 1.0rem;
   padding: 1.2rem;
-  border-radius: 2.4rem;
-  corner-shape: squircle;
+  border-radius: 1.2rem;
   background: #f8fafc;
   border: 1px solid #f1f5f9;
+}
+
+@supports (corner-shape: squircle) {
+  .control-group {
+    border-radius: 2.4rem;
+    corner-shape: squircle;
+  }
 }
 
 .control-label {
@@ -196,8 +208,14 @@ body {
   font-weight: 800;
   background: #e6fdf4;
   padding: 0.2rem 0.6rem;
-  border-radius: 0.8rem;
-  corner-shape: squircle;
+  border-radius: 0.4rem;
+}
+
+@supports (corner-shape: squircle) {
+  .highlight-text {
+    border-radius: 0.8rem;
+    corner-shape: squircle;
+  }
 }
 
 .slider-container {
@@ -222,10 +240,16 @@ body {
   -webkit-appearance: none;
   appearance: none;
   height: 0.6rem;
-  border-radius: 0.6rem;
-  corner-shape: squircle;
+  border-radius: 0.3rem;
   background: #cbd5e1;
   outline: none;
+}
+
+@supports (corner-shape: squircle) {
+  .modern-slider {
+    border-radius: 0.6rem;
+    corner-shape: squircle;
+  }
 }
 
 .modern-slider::-webkit-slider-thumb {
@@ -270,14 +294,20 @@ body {
   background: var(--text-primary);
   border: 0.1rem solid var(--text-primary);
   color: #ffffff;
-  border-radius: 2.4rem;
-  corner-shape: squircle;
+  border-radius: 1.2rem;
   padding: 1.0rem 2.0rem;
   font-size: 1.3rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+@supports (corner-shape: squircle) {
+  .primary-btn {
+    border-radius: 2.4rem;
+    corner-shape: squircle;
+  }
 }
 
 .primary-btn:hover {
@@ -289,8 +319,7 @@ body {
   background: #f8fafc;
   border: 0.1rem solid #e2e8f0;
   color: var(--text-secondary);
-  border-radius: 2.0rem;
-  corner-shape: squircle;
+  border-radius: 1.0rem;
   padding: 0.8rem 1.6rem;
   font-size: 1.2rem;
   font-weight: 600;
@@ -299,6 +328,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+@supports (corner-shape: squircle) {
+  .secondary-btn {
+    border-radius: 2.0rem;
+    corner-shape: squircle;
+  }
 }
 
 .secondary-btn:hover:not(:disabled) {
@@ -387,8 +423,7 @@ body {
   flex-grow: 1;
   background: #f8fafc;
   border: 0.1rem solid #e2e8f0;
-  border-radius: 2.0rem;
-  corner-shape: squircle;
+  border-radius: 1.0rem;
   color: var(--text-primary);
   padding: 1.0rem 1.4rem;
   font-size: 1.3rem;
@@ -396,6 +431,13 @@ body {
   outline: none;
   font-family: var(--font-sans);
   transition: all 0.2s;
+}
+
+@supports (corner-shape: squircle) {
+  .search-input {
+    border-radius: 2.0rem;
+    corner-shape: squircle;
+  }
 }
 
 .search-input:focus {
@@ -408,13 +450,19 @@ body {
   background: #f1f5f9;
   border: 0.1rem solid #e2e8f0;
   color: var(--text-primary);
-  border-radius: 2.0rem;
-  corner-shape: squircle;
+  border-radius: 1.0rem;
   padding: 1.0rem 1.6rem;
   font-size: 1.3rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+@supports (corner-shape: squircle) {
+  .search-btn {
+    border-radius: 2.0rem;
+    corner-shape: squircle;
+  }
 }
 
 .search-btn:hover:not(:disabled) {
@@ -450,11 +498,18 @@ body {
   font-size: 1.1rem;
   font-weight: 600;
   padding: 0.5rem 1.0rem;
-  border-radius: 1.6rem;
-  corner-shape: squircle;
+  border-radius: 0.8rem;
   cursor: pointer;
   transition: all 0.15s;
   font-family: var(--font-sans);
+}
+
+@supports (corner-shape: squircle) {
+  .preset-badge-btn,
+  .preset-shortcut-btn {
+    border-radius: 1.6rem;
+    corner-shape: squircle;
+  }
 }
 
 .preset-badge-btn:hover,
@@ -485,8 +540,14 @@ body {
   background: #e2fbf0;
   color: #0f766e;
   padding: 0.4rem 1.0rem;
-  border-radius: 10rem;
-  corner-shape: squircle;
+  border-radius: 5rem;
+}
+
+@supports (corner-shape: squircle) {
+  .results-summary .highlight-text {
+    border-radius: 10rem;
+    corner-shape: squircle;
+  }
 }
 
 .flight-grid {
@@ -503,11 +564,17 @@ body {
   background: #e0f2fe;
   color: #0369a1;
   padding: 1.0rem 1.4rem;
-  border-radius: 2.4rem;
-  corner-shape: squircle;
+  border-radius: 1.2rem;
   margin-bottom: 1.6rem;
   font-size: 1.2rem;
   font-weight: 600;
+}
+
+@supports (corner-shape: squircle) {
+  .location-banner {
+    border-radius: 2.4rem;
+    corner-shape: squircle;
+  }
 }
 
 .location-name {
@@ -522,11 +589,17 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
   padding: 0.4rem 0.8rem;
-  border-radius: 1.2rem;
-  corner-shape: squircle;
+  border-radius: 0.6rem;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(3, 105, 161, 0.1);
   transition: all 0.2s;
+}
+
+@supports (corner-shape: squircle) {
+  .reset-gps-btn {
+    border-radius: 1.2rem;
+    corner-shape: squircle;
+  }
 }
 
 .reset-gps-btn:hover {
@@ -595,12 +668,18 @@ body {
   display: flex;
   background: var(--card-bg);
   border: 0.1rem solid var(--card-border);
-  border-radius: 4.0rem;
-  corner-shape: squircle;
+  border-radius: 2.0rem;
   overflow: hidden;
   box-shadow: var(--card-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   min-height: 19.0rem;
+}
+
+@supports (corner-shape: squircle) {
+  .flight-card {
+    border-radius: 4.0rem;
+    corner-shape: squircle;
+  }
 }
 
 .flight-card:hover {
@@ -654,12 +733,18 @@ body {
   font-size: 1.0rem;
   font-weight: 800;
   padding: 0.3rem 0.8rem;
-  border-radius: 1.2rem;
-  corner-shape: squircle;
+  border-radius: 0.6rem;
   display: flex;
   align-items: center;
   gap: 0.4rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+@supports (corner-shape: squircle) {
+  .live-badge {
+    border-radius: 1.2rem;
+    corner-shape: squircle;
+  }
 }
 
 .live-dot {
@@ -718,8 +803,7 @@ body {
 .airline-logo-box-placeholder {
   width: 4.0rem;
   height: 4.0rem;
-  border-radius: 2.0rem;
-  corner-shape: squircle;
+  border-radius: 1.0rem;
   border: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
@@ -727,6 +811,14 @@ body {
   overflow: hidden;
   background: #ffffff;
   flex-shrink: 0;
+}
+
+@supports (corner-shape: squircle) {
+  .airline-logo-box,
+  .airline-logo-box-placeholder {
+    border-radius: 2.0rem;
+    corner-shape: squircle;
+  }
 }
 
 .airline-logo-img {
@@ -762,9 +854,15 @@ body {
   font-size: 1.1rem;
   font-weight: 800;
   padding: 0.4rem 1.0rem;
-  border-radius: 1.6rem;
-  corner-shape: squircle;
+  border-radius: 0.8rem;
   white-space: nowrap;
+}
+
+@supports (corner-shape: squircle) {
+  .flight-route-badge {
+    border-radius: 1.6rem;
+    corner-shape: squircle;
+  }
 }
 
 .flight-route-badge.no-schedule {
