@@ -2,6 +2,8 @@
 
 A live flight telemetry scanner and tracker built with Next.js and custom CSS. It localizes nearby air traffic using your device coordinates, manual search queries, or preset high-traffic airport hubs.
 
+![What's Over My Head Screenshot](public/screenshot.png)
+
 ## Features
 
 - **Live ADS-B Telemetry**: Locates active transponders in your vicinity.
@@ -12,4 +14,4 @@ A live flight telemetry scanner and tracker built with Next.js and custom CSS. I
 ## See it Live
 Open [this link](https://whats-over-my-head.vercel.app/) in your browser.
 
-Made by [alpher03](https://alpher03.vercel.app).
+Made by [alpher03](https://aayushsaini.com).
