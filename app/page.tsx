@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Aircraft, PermissionState, PresetAirport, ThemeType } from './types';
+import { Aircraft, PermissionState, PresetAirport } from './types';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import FlightCard from '../components/FlightCard';
@@ -20,13 +20,6 @@ export default function Home() {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [permission, setPermission] = useState<PermissionState>('checking');
   const [locationError, setLocationError] = useState<string | null>(null);
-
-  // Dynamic Theme States
-  const [theme, setTheme] = useState<ThemeType>('default');
-
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
 
   // Manual Mode & Search States
   const [isManualMode, setIsManualMode] = useState<boolean>(false);
@@ -101,7 +94,7 @@ export default function Home() {
       },
       (error) => {
         console.warn('Geolocation error:', error.message || error);
-        
+
         // If this is the initial page load check (not a user gesture) and it fails,
         // we set permission to 'prompt' so the user is not greeted with a hard
         // "Access Denied" screen. They will see the friendly "Location Required" panel
@@ -305,7 +298,7 @@ export default function Home() {
 
   return (
     <div className="container">
-      <Header theme={theme} setTheme={setTheme} />
+      <Header />
 
       <main className="main-content">
         {permission === 'checking' && (
@@ -341,7 +334,7 @@ export default function Home() {
                   Scanning Coordinates: <span className="location-name">{customLocationName || 'Custom'}</span>
                 </span>
                 <button onClick={handleResetToGps} className="reset-gps-btn font-mono">
-                  Reset to Local GPS
+                  Reset to GPS
                 </button>
               </div>
             )}
@@ -366,52 +359,63 @@ export default function Home() {
               presetAirports={PRESET_AIRPORTS}
             />
 
-            {/* Content States */}
-            {loading && aircrafts.length === 0 ? (
-              <div className="card status-card loading-state font-mono">
-                <div className="spinner"></div>
-                <p className="loading-dots">Scanning Sky Vector Transponders</p>
-              </div>
-            ) : fetchError ? (
-              <div className="card status-card error-state font-mono">
-                <div className="alert-illustration">⚠️</div>
-                <h2>Retrieval Failed</h2>
-                <p className="error-message">{fetchError}</p>
-                <button className="primary-btn font-mono" onClick={() => fetchFlights(coords.lat, coords.lon, radiusKm)}>
-                  Retry Scan
-                </button>
-              </div>
-            ) : aircrafts.length === 0 ? (
-              <div className="card empty-card font-mono" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="empty-illustration">📡</div>
-                <h3>No Flight Traffic Detected</h3>
-                <p>No active transponders matched vector criteria within {radiusKm}KM radius.</p>
-                <p className="empty-tip">Tip: Increase scan range slider or trigger preset airport zones (e.g. JFK or LHR) to verify feed parsing.</p>
-              </div>
-            ) : (
-              <div className="flight-results font-mono">
-                <div className="results-summary">
-                  Aircraft in Range: <span className="highlight-text">{aircrafts.length}</span>
-                </div>
-                
-                <div className="flight-grid">
-                  {aircrafts.slice(0, visibleCount).map((ac) => (
-                    <FlightCard key={ac.hex} ac={ac} userCoords={coords} />
-                  ))}
-                </div>
-                {aircrafts.length > visibleCount && (
-                  <div className="load-more-container">
-                    <button
-                      onClick={() => setVisibleCount((prev) => prev + 5)}
-                      className="secondary-btn font-mono"
-                      style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
-                    >
-                      Load More Aircraft (+{Math.min(5, aircrafts.length - visibleCount)})
-                    </button>
+            <div className="flight-results">
+              {/* Stats Row matching reference image */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.6rem', marginTop: '1.6rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <div>
+                  <h2 className="results-summary" style={{ margin: 0 }}>
+                    Aircraft in Range <span className="highlight-text">{aircrafts.length}</span>
+                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.4rem', fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ width: '0.8rem', height: '0.8rem', backgroundColor: 'var(--accent-emerald)', borderRadius: '50%' }}></span>
+                    <span>LIVE • Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : 'just now'}</span>
                   </div>
-                )}
+                </div>
               </div>
-            )}
+
+              {/* Content States */}
+              {loading && aircrafts.length === 0 ? (
+                <div className="card status-card loading-state">
+                  <div className="spinner"></div>
+                  <p className="loading-dots">Scanning Sky Vector Transponders</p>
+                </div>
+              ) : fetchError ? (
+                <div className="card status-card error-state">
+                  <div className="alert-illustration">⚠️</div>
+                  <h2>Retrieval Failed</h2>
+                  <p className="error-message">{fetchError}</p>
+                  <button className="primary-btn" onClick={() => fetchFlights(coords.lat, coords.lon, radiusKm)}>
+                    Retry Scan
+                  </button>
+                </div>
+              ) : aircrafts.length === 0 ? (
+                <div className="card empty-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="empty-illustration" style={{ fontSize: '3.2rem', marginBottom: '0.8rem' }}>📡</div>
+                  <h3>No Flight Traffic Detected</h3>
+                  <p style={{ color: '#7c7c7cff', textAlign: 'center', fontSize: '1.2rem' }}>No active transponders matched vector criteria within {radiusKm}KM radius.</p>
+                  <p className="empty-tip" style={{ color: '#7c7c7cff', textAlign: 'center', fontSize: '1rem', marginTop: '2rem' }}>Tip: Increase the scan range slider or choose presets.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flight-grid">
+                    {aircrafts.slice(0, visibleCount).map((ac) => (
+                      <FlightCard key={ac.hex} ac={ac} userCoords={coords} />
+                    ))}
+                  </div>
+                  {aircrafts.length > visibleCount && (
+                    <div className="load-more-container">
+                      <button
+                        onClick={() => setVisibleCount((prev) => prev + 5)}
+                        className="secondary-btn"
+                        style={{ width: '100%', justifyContent: 'center', marginTop: '1.6rem' }}
+                      >
+                        Load More Aircraft (+{Math.min(5, aircrafts.length - visibleCount)})
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </main>

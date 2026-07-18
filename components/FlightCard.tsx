@@ -82,7 +82,7 @@ export default function FlightCard({ ac, userCoords }: FlightCardProps) {
         const queryParams = [];
         if (ac.flight && ac.flight !== '—') queryParams.push(`callsign=${encodeURIComponent(ac.flight)}`);
         if (ac.hex && ac.hex !== 'unknown') queryParams.push(`hex=${encodeURIComponent(ac.hex)}`);
-        
+
         if (queryParams.length === 0) {
           setLoading(false);
           return;
@@ -91,7 +91,7 @@ export default function FlightCard({ ac, userCoords }: FlightCardProps) {
         const res = await fetch(`/api/route-info?${queryParams.join('&')}`);
         if (!res.ok) throw new Error('Failed to load extra details');
         const data = await res.json();
-        
+
         if (active) {
           setRouteInfo(data.route);
           setAircraftInfo(data.aircraft);
@@ -118,123 +118,159 @@ export default function FlightCard({ ac, userCoords }: FlightCardProps) {
   const [photoFailed, setPhotoFailed] = useState<boolean>(false);
 
   return (
-    <article className="flight-card hover-reveal">
-      {/* Top Banner: Plane Photo if available */}
-      {aircraftInfo?.photoUrl && !photoFailed && (
-        <div className="flight-photo-header">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={aircraftInfo.photoUrl} 
-            alt={`${aircraftInfo.manufacturer || ''} ${aircraftInfo.modelName || ''}`} 
+    <article className="flight-card">
+      {/* Left side: Photo or placeholder */}
+      <div className="flight-photo-container">
+        {!photoFailed && aircraftInfo?.photoUrl ? (
+          <img
+            src={aircraftInfo.photoUrl}
+            alt={`${aircraftInfo.manufacturer || ''} ${aircraftInfo.modelName || ''}`}
             className="flight-photo"
             onError={() => setPhotoFailed(true)}
             loading="lazy"
           />
-          <div className="photo-overlay"></div>
-        </div>
-      )}
-
-      <div className="flight-card-header">
-        <div className="flight-identity-row">
-          {/* Airline Logo with 4 corner anchors */}
-          {logoUrl && !logoFailed && (
-            <div className="airline-logo-wrapper">
-              <span className="corner-plus top-left">+</span>
-              <span className="corner-plus top-right">+</span>
-              <span className="corner-plus bottom-left">+</span>
-              <span className="corner-plus bottom-right">+</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoUrl}
-                alt={`${airlineCode || 'Airline'} logo`}
-                className="airline-logo"
-                onLoad={() => setLogoLoaded(true)}
-                onError={handleLogoError}
-                loading="lazy"
-              />
-            </div>
-          )}
-          <div className="flight-identity">
-            <span className="flight-callsign">{ac.flight !== '—' ? ac.flight : 'Unknown'}</span>
+        ) : (
+          <div className="flight-photo-placeholder">
+            <svg className="icon-plane-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V14L13 9V3.5A1.5 1.5 0 0 0 11.5 2A1.5 1.5 0 0 0 10 3.5V9L2 14V16L10 13.5V19L8 20.5V22L11.5 21L15 22V20.5L13 19V13.5L21 16Z" />
+            </svg>
           </div>
-        </div>
-        
-        <div className="header-right-side" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          {/* Route [SRC -> DST] */}
-          <span className="header-route font-mono" style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
-            {loading ? (
-              '[Resolving...]'
-            ) : routeInfo?.origin && routeInfo?.destination ? (
-              `[${routeInfo.origin.iata || routeInfo.origin.icao || '???'} ➔ ${routeInfo.destination?.iata || routeInfo.destination?.icao || '???'}]`
-            ) : (
-              '[No Schedule]'
-            )}
-          </span>
-          
-          <div className="flight-distance">
-            {ac.distanceKm !== null ? `${ac.distanceKm} KM` : 'DIST UNKNOWN'}
-          </div>
-        </div>
+        )}
+        {/* <div className="live-badge">
+          <span className="live-dot"></span>
+          LIVE
+        </div> */}
       </div>
 
-      <div className="flight-card-body">
-        {/* Technical Data Grid */}
-        <div className="tech-telemetry-grid">
-          <div className="tech-row-horizontal">
-            <div className="tech-col">
-              <span className="tech-label">PLANE</span>
-              <span className="tech-value font-mono highlight-cyan">
-                {loading ? (
-                  <span className="loading-dots">RESOLVING</span>
-                ) : aircraftInfo?.manufacturer ? (
-                  `${aircraftInfo.manufacturer} ${aircraftInfo.modelName || aircraftInfo.icaoType || ''}`
-                ) : ac.type !== '—' ? (
-                  ac.type
-                ) : (
-                  'UNKNOWN MODEL'
-                )}
-              </span>
-            </div>
-
-            {aircraftInfo?.owner && (
-              <div className="tech-col">
-                <span className="tech-label">OPERATOR</span>
-                <span className="tech-value font-mono">
-                  {aircraftInfo.owner}
-                </span>
+      {/* Right side: Information */}
+      <div className="flight-details-container">
+        {/* Top Header Row */}
+        <div className="flight-header-row">
+          <div className="flight-identity-group">
+            {logoUrl && !logoFailed ? (
+              <div className="airline-logo-box">
+                <img
+                  src={logoUrl}
+                  alt={`${airlineCode || 'Airline'} logo`}
+                  className="airline-logo-img"
+                  onLoad={() => setLogoLoaded(true)}
+                  onError={handleLogoError}
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div className="airline-logo-box-placeholder">
+                {airlineCode || '??'}
               </div>
             )}
+            <span className="flight-callsign-text">{ac.flight !== '—' ? ac.flight : 'Unknown'}</span>
           </div>
 
-          <div className="tech-row-horizontal">
-            <div className="tech-col">
-              <span className="tech-label">ALTITUDE</span>
-              <span className="tech-value font-mono text-green">
-                {ac.altitude === 'ground' ? 'Ground' : ac.altitude !== null ? `${ac.altitude.toLocaleString()} FT` : '—'}
+          <div className="flight-route-container">
+            {loading ? (
+              <span className="flight-route-badge loading-route">... ➔ ...</span>
+            ) : routeInfo?.origin && routeInfo?.destination ? (
+              <span className="flight-route-badge">
+                {routeInfo.origin.iata || routeInfo.origin.icao || '???'} ➔ {routeInfo.destination?.iata || routeInfo.destination?.icao || '???'}
               </span>
+            ) : (
+              <span className="flight-route-badge no-schedule">No Route</span>
+            )}
+
+            <div className="flight-distance-badge">
+              <svg className="icon-location" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>{ac.distanceKm !== null ? `${ac.distanceKm.toFixed(2)} km away` : 'Dist Unknown'}</span>
             </div>
-            <div className="tech-col">
-              <span className="tech-label">SPEED</span>
-              <span className="tech-value font-mono text-green">
+          </div>
+
+          {/* <div className="flight-action-chevron">
+            <svg className="icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </div> */}
+        </div>
+
+        {/* Stats Grid */}
+        <div className="flight-stats-grid">
+          <div className="flight-stat-col">
+            <span className="stat-label">AIRCRAFT</span>
+            <span className="stat-value">
+              {loading ? (
+                'Resolving...'
+              ) : aircraftInfo?.manufacturer ? (
+                `${aircraftInfo.manufacturer} ${aircraftInfo.modelName || aircraftInfo.icaoType || ''}`
+              ) : ac.type !== '—' ? (
+                ac.type
+              ) : (
+                'Unknown Model'
+              )}
+            </span>
+          </div>
+
+          <div className="flight-stat-col">
+            <span className="stat-label">ALTITUDE</span>
+            <span className="stat-value altitude-value">
+              <svg className="icon-altitude" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+              </svg>
+              {ac.altitude === 'ground' ? 'Ground' : ac.altitude !== null ? `${ac.altitude.toLocaleString()} ft` : '—'}
+            </span>
+          </div>
+
+          <div className="flight-stat-col">
+            <span className="stat-label">SPEED</span>
+            <span className="stat-value speed-value">
+              <svg className="icon-speed" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 14 4-4" />
+                <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+              </svg>
+              <span>
                 {ac.speed !== null ? `${ac.speed} KTS` : '—'}
-                <span className="sub-metric">{ac.speed !== null && ` (${knotsToKmh(ac.speed)})`}</span>
+                {ac.speed !== null && <span className="stat-sub-value"> ({knotsToKmh(ac.speed)})</span>}
               </span>
-            </div>
+            </span>
+          </div>
+        </div>
+
+        <div className="flight-card-divider"></div>
+
+        {/* Footer Details */}
+        <div className="flight-footer-row">
+          <div className="flight-footer-col">
+            <span className="footer-label">OPERATOR</span>
+            <span className="footer-value">
+              {aircraftInfo?.owner || ac.flight !== '—' && airlineCode ? `${airlineCode} Operator` : '—'}
+            </span>
+          </div>
+          <div className="flight-footer-col">
+            <span className="footer-label">DEPARTURE</span>
+            <span className="footer-value">
+              {loading ? (
+                '...'
+              ) : routeInfo?.origin ? (
+                `${routeInfo.origin.iata || routeInfo.origin.icao} - ${routeInfo.origin.name}`
+              ) : (
+                '—'
+              )}
+            </span>
+          </div>
+          <div className="flight-footer-col">
+            <span className="footer-label">ARRIVAL</span>
+            <span className="footer-value">
+              {loading ? (
+                '...'
+              ) : routeInfo?.destination ? (
+                `${routeInfo.destination.iata || routeInfo.destination.icao} - ${routeInfo.destination.name}`
+              ) : (
+                '—'
+              )}
+            </span>
           </div>
         </div>
       </div>
-
-      {/* Expanded airport tooltip detail display */}
-      {!loading && routeInfo?.origin && (
-        <div className="flight-card-footer font-mono">
-          <div className="footer-route-detail">
-            DEP: <span className="highlight-code">{routeInfo.origin.iata || routeInfo.origin.icao || '???'}</span> <span className="airport-name-footer">{routeInfo.origin.name} ({routeInfo.origin.country})</span>
-          </div>
-          <div className="footer-route-detail">
-            ARR: <span className="highlight-code">{routeInfo.destination?.iata || routeInfo.destination?.icao || '???'}</span> <span className="airport-name-footer">{routeInfo.destination?.name} ({routeInfo.destination?.country})</span>
-          </div>
-        </div>
-      )}
     </article>
   );
 }

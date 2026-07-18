@@ -55,10 +55,10 @@ export default function ControlPanel({
             {searchLoading ? <span className="mini-spinner"></span> : 'Search'}
           </button>
         </form>
-        
+
         {/* Presets below search inside dashboard */}
         <div className="dashboard-presets-row" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>high traffic airports:</span>
+          <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>High Traffic Airports:</span>
           <div className="dashboard-presets" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             {presetAirports.map((airport) => (
               <button
@@ -96,6 +96,24 @@ export default function ControlPanel({
       </div>
 
       <div className="refresh-actions">
+        <div className="auto-refresh-control">
+          <label className="switch-container">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="switch-input"
+            />
+            <span className="switch-slider"></span>
+            <span className="switch-label font-mono">Auto Scan (10s)</span>
+          </label>
+          {/* {lastUpdated && (
+            <span className="last-updated">
+              Updated: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )} */}
+        </div>
+
         <button
           id="refresh-btn"
           className="secondary-btn font-mono"
@@ -112,23 +130,6 @@ export default function ControlPanel({
             'Scan Sky Now'
           )}
         </button>
-
-        <div className="auto-refresh-control">
-          <label className="auto-refresh-toggle font-mono">
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="toggle-checkbox"
-            />
-            <span>AUTO SCAN (10S)</span>
-          </label>
-          {lastUpdated && (
-            <span className="last-updated">
-              Updated: {lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );

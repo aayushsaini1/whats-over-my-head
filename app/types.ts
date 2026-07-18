@@ -46,5 +46,3 @@ export interface LazyAircraftInfo {
   photoUrl: string | null;
   photoThumbUrl: string | null;
 }
-
-export type ThemeType = 'default' | 'dark-blue' | 'pink' | 'light-blue';
