@@ -75,6 +75,14 @@ export default function Home() {
   // Request Location
   const requestLocation = useCallback((isUserGesture = false) => {
     if (typeof window === 'undefined') return;
+    
+    // Geolocation requires a secure context (HTTPS) on mobile devices
+    if (!window.isSecureContext) {
+      setPermission('unsupported');
+      setLocationError('GPS requires a secure context (HTTPS). Mobile browsers block location requests on HTTP connections. Please configure HTTPS or use manual search below.');
+      return;
+    }
+
     if (!navigator.geolocation) {
       setPermission('unsupported');
       setLocationError('Geolocation is not supported by this browser.');
@@ -105,9 +113,9 @@ export default function Home() {
         } else {
           setPermission('denied');
           if (error.code === error.PERMISSION_DENIED) {
-            setLocationError('Location permission was denied. Please enable location services or search for a location manually.');
+            setLocationError('Location permission was denied. Please check your browser/device settings to allow location access, or search manually.');
           } else {
-            setLocationError('Unable to retrieve your location. Please check your GPS signal or search manually.');
+            setLocationError('Unable to retrieve your location. Please check your device GPS signal or search manually.');
           }
         }
       },
